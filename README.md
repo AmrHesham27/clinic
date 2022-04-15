@@ -7,6 +7,10 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Why this project?
+This project will be a branch of projec clinic , 
+the goal of this branch is to apply new staff like APIs, relationships of eloquent models and testing.
+
 ## How to start the project
 ```sh
 $ php artisan migrate
