@@ -31,7 +31,8 @@
                     <td>{{ $patient->phoneNumber }}</td>
                     <td class="d-flex flex-row">
                         <a href='/Visits/create/{{$patient->id}}' class="btn btn-success mx-1">Add Visit</a>
-                        <a href='/Visits/{{$patient->id}}' class="btn btn-primary mx-1"> show last visit </a>
+                        <a href='/showPatientVisits/{{$patient->id}}' class="btn btn-primary mx-1"> Show all visits </a>
+                        <a href='/showLastVisit/{{$patient->id}}' class="btn btn-primary mx-1"> Show last visit </a>
                     </td>
                 </tr>
             @endforeach

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Visit;
 
 class Patient extends Model
 {
@@ -15,4 +16,9 @@ class Patient extends Model
         'address',
         'phoneNumber',
     ];
+
+    public function visits()
+    {
+        return $this->hasMany(Visit::class, 'patientId');
+    }
 }

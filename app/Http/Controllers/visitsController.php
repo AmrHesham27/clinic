@@ -1,15 +1,12 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use Illuminate\Http\Request;
 use App\Models\Visit;
-use App\Models\Diagnose;
-use App\Models\Prescription;
-use App\Models\Test;
+use App\Models\Patient;
 use App\Models\workinghours;
 use Carbon\Carbon;
-
+use Exception;
 
 class visitsController extends Controller
 {
@@ -74,6 +71,10 @@ class visitsController extends Controller
         return redirect(url("/Visits/{$data['patientId']}"));
     }
 
+    public function checkDateView(){
+        return view('checkDate', ['date' => 0]);
+    }
+
     public function checkDate(Request $request){
         $this->validate($request,[
             "date" => "required|date|after:yesterday",
@@ -100,73 +101,6 @@ class visitsController extends Controller
             ]);
     }
 
-    public function checkDateView(){
-        return view('checkDate', ['date' => 0]);
-    }
-
-
-
-    /** Add diagnoses, tests and prescriptions */
-    public function addDiagnoseView(Request $request){
-        $id = $request->id;
-        return view('Visits.addTest', ['id' => $id]);
-    }
-
-    public function addDiagnose(Request $request){
-        $data = $this->validate($request,[
-            "visit_id"  => "required|numeric",
-            "diagnosis" => "required|string|max:250"
-        ]);
-        $visit = $this->getVisit($data['visit_id']);
-        if(!$visit){
-            $this->message(false, '', 'This visit does not exist');
-            return redirect()->back();
-        };
-        $op = Diagnose::create($data);
-        $this->message($op, 'Diagnose was created', 'Error happened');
-        return redirect()->back();
-    }
-
-    public function addPrescriptionView(Request $request){
-        $id = $request->id;
-        return view('Visits.addTest', ['id' => $id]);
-    }
-
-    public function addPrescription(Request $request){
-        $data = $this->validate($request,[
-            "visit_id"  => "required|numeric",
-            "name" => "required|string|max:100"
-        ]);
-        $visit = $this->getVisit($data['visit_id']);
-        if(!$visit){
-            $this->message(false, '', 'This visit does not exist');
-            return redirect()->back();
-        };
-        $op = Prescription::create($data);
-        $this->message($op, 'Prescription was created', 'Error happened');
-        return redirect()->back();
-    }
-
-    public function addTestView(Request $request){
-        $id = $request->id;
-        return view('Visits.addTest', ['id' => $id]);
-    }
-
-    public function addTest(Request $request){
-        $data = $this->validate($request,[
-            "visit_id"  => "required|numeric",
-            "testName" => "required|string|max:80"
-        ]);
-        $visit = $this->getVisit($data['visit_id']);
-        if(!$visit){
-            $this->message(false, '', 'This visit does not exist');
-            return redirect()->back();
-        };
-        $op = Test::create($data);
-        $this->message($op, 'Test was created', 'Error happened');
-        return redirect()->back();
-    }
-
     /**
      * Display the specified resource.
      *
@@ -175,13 +109,40 @@ class visitsController extends Controller
      */
     public function show($id)
     {
-        $patientVisits = Visit::where('patientId', $id)->orderBy('created_at', 'desc')->get();
-        if($patientVisits->count() == 0){
-            $this->message(false, '', 'This patient has no visits yet');
-            return redirect()->back();
-        };
-        $lastVisit = $patientVisits[0];
-        return view('Visits.show', ['lastVisit' => $lastVisit]);
+        try{
+            $visit = Visit::findOrFail($id);
+        }
+        catch(Exception){
+            $this->message(false, '', 'This visit does not exist');
+            return redirect(url('/Visits/'));
+        }
+        return view('Visits.show', ['visit' => $visit]);
+    }
+
+    public function showLastVisit($patientId){
+        try {
+            Patient::findOrFail($patientId);
+        }
+        catch (Exception){
+            $this->message(false, '', 'This patient does not exist');
+            return redirect(url('/'));
+        }
+        $visit = Visit::where('patientId', $patientId)->orderBy('created_at', 'desc')->firstOrFail();
+        $visit_id = $visit['id'];
+        return redirect(url("Visits/$visit_id"));
+    }
+
+    public function showPatientVisits($patientId){
+        try {
+            $patient = Patient::findOrFail($patientId);
+        }
+        catch (Exception){
+            $this->message(false, '', 'This patient does not exist');
+            return redirect(url('/Visits/'));
+        }
+
+        $visits = $patient->visits()->paginate(8);
+        return view('Visits.showVisits', ['visits' => $visits]);
     }
 
     /**

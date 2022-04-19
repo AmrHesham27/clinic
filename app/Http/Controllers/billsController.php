@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Bill;
 use App\Models\Procedure;
 use App\Models\services_procedures;
+use App\Models\Visit;
+use Exception;
 
 class billsController extends Controller
 {
@@ -29,8 +31,13 @@ class billsController extends Controller
     public function store(Request $request)
     {
         $visitId = $request->id;
-        $visit = $this->getVisit($visitId);
-        if(!$visit) return redirect()->back();
+        try{
+            $visit = Visit::findOrFail($visitId);
+        }
+        catch(Exception){
+            $this->message(false, '', 'This visit does not exist');
+            return redirect(url('/Visits/'));
+        }
 
         // does this visit has a bill ?
         $bill = Bill::where('visit_id', $visitId)->get();
@@ -53,10 +60,10 @@ class billsController extends Controller
 
     public function printFirstReceipt (Request $request){
         $billId = $request->id;
-        $bill = $this->getBill($billId);
+        $bill = Bill::findOrFail($billId);
         if( !$bill ) return redirect()->back();
 
-        $visit = $this->getVisit($bill['visit_id']);
+        $visit = Visit::findOrFail($bill['visit_id']);
         $visitType = $visit['visitType'];
         $service = services_procedures::where('serviceName', $visitType)->get();
         $fees = $service[0]['price'];
@@ -66,10 +73,10 @@ class billsController extends Controller
 
     public function printSecondReceipt (Request $request){
         $billId = $request->id;
-        $bill = $this->getBill($billId);
+        $bill = Bill::findOrFail($billId);
         if( !$bill ) return redirect()->back();
 
-        $visit = $this->getVisit($bill['visit_id']);
+        $visit = Visit::findOrFail($bill['visit_id']);
         if( !$visit ) return redirect()->back();
 
         $procedures = Procedure::where('bill_id', $billId)->get();
@@ -79,7 +86,7 @@ class billsController extends Controller
         };
         $fees = 0;
         foreach($procedures as $procedure){
-            $procedureRow = $this->getProcedure( $procedure->procedureId );
+            $procedureRow = services_procedures::findOrFail( $procedure->procedureId );
             $procedure['name'] = $procedureRow['serviceName'];
             $fees += $procedure['price'];
         };
@@ -106,9 +113,14 @@ class billsController extends Controller
             "bill_id" => "required|numeric"
         ]);
 
-        $procedure = $this->getProcedure($data['procedureId']);
-        $bill = $this->getBill($data['bill_id']);
-        if( !$bill || !$procedure) return redirect()->back();
+        try {
+            $procedure = services_procedures::findOrFail( $data['procedureId'] );
+            $bill = Bill::findOrFail($data['bill_id']);
+        }
+        catch (Exception){
+            $this->message(false, '', 'Error, check procedure name and bill id.');
+            return redirect(url('/'));
+        }
 
         $procedurePrice = $procedure['price'];
         $data['price'] = $procedurePrice;
@@ -133,8 +145,9 @@ class billsController extends Controller
     // get BY visit id
     public function show($id)
     {
-        $bill = $this->getBill_byVisitId($id);
-        if( !$bill ) return redirect()->back();
+        $bill = Bill::where('visit_id', $id)->firstOrFail();
+        if( !$bill ) return redirect(url('/Bills/'));
+
         return view('Bills.show', ['bill' => $bill]);
     }
 
