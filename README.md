@@ -13,6 +13,10 @@ the goal of this branch is to apply new staff like APIs, relationships of eloque
 
 ## How to start the project
 ```sh
+$ composer i
+```
+
+```sh
 $ php artisan migrate
 ```
 
@@ -22,6 +26,15 @@ $ php artisan db:seed
 
 ```sh
 $ php artisan serve
+```
+
+## Incase of problem in starting the project
+In case you have found any problem while starting the project including the message 'Application is in production'
+- Change the .env.example file in the root of the project to .env
+- Make sure you have created Database in your local enviroment 
+- use this command to clear cache of configuration
+```sh 
+$ php artisan cache:clear
 ```
 
 ## About Laravel
