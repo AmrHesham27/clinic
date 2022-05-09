@@ -15,7 +15,6 @@ class patientsContoller extends Controller
     public function index()
     {
         $all_patients = Patient::paginate(8);
-        //return view('Patients.index', ['all_patients' => $all_patients]);
         return response()->json($all_patients, 200);
     }
 
@@ -45,8 +44,8 @@ class patientsContoller extends Controller
         ]);
         $id = Patient::create($data)->id;
         $this->message($id, 'new patient was added successfully', 'Error try again');
-        if(!$id) return redirect()-back();
-        return redirect(url("/Visits/create/$id"));
+        if(!$id) return response()->json('fail', 500);
+        return response()->json('done', 200);
     }
 
     /**
