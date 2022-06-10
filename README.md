@@ -8,8 +8,8 @@
 </p>
 
 ## Why this project?
-This project will be a branch of projec clinic , 
-the goal of this branch is to apply new staff like APIs, relationships of eloquent models and testing.
+In this project I am building a clinic management system using laravel and blades. 
+In the branch APIs, I am turning the application into APIs and using it with Vue.
 
 ## How to start the project
 ```sh
