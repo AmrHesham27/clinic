@@ -13,11 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('workinghours', function (Blueprint $table) {
+        Schema::create('workingDays', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('day', 20);
-            $table->time('startTime');
-            $table->time('endTime');
+            $table->string('day', 10);
+            $table->boolean('working');
         });
     }
 

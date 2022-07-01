@@ -16,4 +16,9 @@ class Visit extends Model
         'endTime',
         'visitType'
     ];
+
+    public function patientName()
+    {
+        return $this->belongsTo(Patient::class, 'patientId');
+    }
 }

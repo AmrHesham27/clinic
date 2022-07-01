@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Visit;
 use App\Models\Patient;
-use App\Models\workinghours;
+use App\Models\WorkingDays;
 use Carbon\Carbon;
 use Exception;
+use stdClass;
+use Illuminate\Support\Facades\DB;
 
 class visitsController extends Controller
 {
@@ -17,8 +19,8 @@ class visitsController extends Controller
      */
     public function index()
     {
-        $all_visits = Visit::paginate(8);
-        return view('Visits.index', ['all_visits' => $all_visits]);
+        $all_visits = Visit::orderBy('created_at', 'desc')->paginate(8);
+        return response()->json($all_visits, 200);
     }
 
     /**
@@ -28,8 +30,7 @@ class visitsController extends Controller
      */
     public function create(Request $request)
     {
-        $id = $request->id;
-        return view('Visits.create', ['id' => $id]);
+        //
     }
 
     /**
@@ -44,61 +45,66 @@ class visitsController extends Controller
             "patientId"  => "required|numeric",
             "date" => "required|date|after:yesterday",
             "startTime" => "required|date_format:H:i",
+            "endTime" => "required|date_format:H:i",
             "visitType" => "required|in:examination,consultation",
         ]);
-        $day = Carbon::createFromFormat('Y-m-d', $request->date)->format('l');
+        $same_time_visits = Visit::whereDate('date', '=', $data['date'])
+            ->where( function($query) use($data) {
+                $query
+                    ->whereTime('startTime', '<=', $data['startTime'])
+                    ->whereTime('endTime', '>=', $data['endTime']);
+            })
+            ->orWhere( function($query) use($data) {
+                $query
+                    ->whereBetween('startTime', [$data['startTime'], $data['endTime']])
+                    ->orWhereBetween('endTime', [$data['startTime'], $data['endTime']]);
+            })
+            ->get();
 
-        // does this working hour exist?
-        $workingHour = workinghours::where('day', $day)->where('startTime', $request->startTime)->get();
-        if ( $workingHour->count() == 0){
-            $this->message(false, '', 'please choose valid time.');
-            return redirect()->back();
-        };
-
-        // is there a visit in this time ?
-        $visitTime = Visit::where('date', $request->date)->where('startTime', $request->startTime)->get();
-        if ( $visitTime->count() != 0){
-            $this->message(false, '', 'This time is reserved already.');
-            return redirect()->back();
-        };
-
-        $endTime = workinghours::where('day', $day)->where('startTime', $request->startTime)->get();
-        $data['endTime']= $endTime[0]['endTime'];
-
-        $id = Visit::create($data)->id;
-        $this->message($id, 'new appointment was reserved successfully', 'Error try again');
-        if( !$id ) return redirect()->back();
-        return redirect(url("/Visits/{$data['patientId']}"));
-    }
-
-    public function checkDateView(){
-        return view('checkDate', ['date' => 0]);
+        if (!count($same_time_visits)) {
+            Visit::create($data);
+        }
+        return response()->json(count($same_time_visits), 200);
     }
 
     public function checkDate(Request $request){
-        $this->validate($request,[
-            "date" => "required|date|after:yesterday",
-        ]);
-        $day = Carbon::createFromFormat('Y-m-d', $request->date)->format('l');
-
-        $workingHoursArray = [];
-        $workingHours = workinghours::where('day', $day)->get();
-        foreach($workingHours as $hour){
-            array_push($workingHoursArray, $hour->startTime);
-        }
-
-        $startTimes = [];
-        $dayVisits = Visit::where('date', $request->date)->get();
-        foreach($dayVisits as $visit){
-            array_push($startTimes, $visit->startTime);
-        }
-
-        return view('checkDate',
-            [
-                'workingHours' => $workingHoursArray,
-                'startTimes' => $startTimes,
-                'date' => $request->date
+        $response = new stdClass();
+        try{
+            $data = $this->validate($request,[
+                "date" => "required|date|after:yesterday",
             ]);
+            $day_name = Carbon::parse($data['date'])->format('l');
+            $is_working_day = WorkingDays::where('workingdays.day', $day_name)
+                ->get()[0]->working;
+
+            $same_day_visits = Visit::whereDate('date', '=', $data['date'])
+            ->addSelect(['patientName' => Patient::select('patientName')
+            ->whereColumn('patients.id', 'visits.patientId')])
+            ->get();
+
+            $response->data = $same_day_visits;
+            $response->is_working_day = $is_working_day;
+            return response()->json($response, 200);
+        }
+        catch (\Exception $e) {
+            $response->message = $e->getMessage();
+            return response()->json($response, 500);
+        }
+    }
+
+    public function checkWorkingDays() {
+        $response = new stdClass();
+        try{
+            $workingDays = DB::table('WorkingDays')->select('day')
+                ->groupBy('day')
+                ->get();
+            $response->data = $workingDays;
+            return response()->json($response, 200);
+        }
+        catch (Exception) {
+            $response->message = 'Error';
+            return response()->json($response, 500);
+        }
     }
 
     /**

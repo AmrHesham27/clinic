@@ -1,7 +1,8 @@
 <?php
 
 use App\Http\Controllers\patientsContoller;
-use Illuminate\Http\Request;
+use App\Http\Controllers\visitsController;
+use App\Http\Controllers\prescriptionsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -23,9 +24,8 @@ use Illuminate\Support\Facades\Route;
 Route::group(['middleware' => 'cors'], function () {
     Route::get('/', [patientsContoller::class,'index']);
 
-
     Route::resource('Patients' ,patientsContoller::class);
-
+    Route::get('Patients/search/{entry}', [patientsContoller::class, 'search']);
 
     Route::resource('Bills' ,billsController::class)->except(['create', 'store']);
     Route::get('Bills/store/{id}', [billsController::class, 'store']);
@@ -38,7 +38,7 @@ Route::group(['middleware' => 'cors'], function () {
     Route::get('/showLastVisit/{id}', [visitsController::class, 'showLastVisit']);
 
     Route::post('/checkDate', [visitsController::class, 'checkDate']);
-    Route::get('/checkDate', [visitsController::class, 'checkDateView']);
+    Route::get('/checkWorkingDays', [visitsController::class, 'checkWorkingDays']);
 
     // add diagnoses, prescriptions and tests
     Route::get('/Visits/addDiagnose/{id}', [diagnosesController::class, 'create']);
