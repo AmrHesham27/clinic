@@ -2,7 +2,9 @@
 
 use App\Http\Controllers\patientsContoller;
 use App\Http\Controllers\visitsController;
-use App\Http\Controllers\prescriptionsController;
+use App\Http\Controllers\TestResultController;
+use App\Http\Controllers\testsController;
+use App\Http\Controllers\diagnosesController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,41 +24,19 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::group(['middleware' => 'cors'], function () {
-    Route::get('/', [patientsContoller::class,'index']);
-
-    Route::resource('Patients' ,patientsContoller::class);
+    Route::resource('Patients', patientsContoller::class);
     Route::get('Patients/search/{entry}', [patientsContoller::class, 'search']);
 
-    Route::resource('Bills' ,billsController::class)->except(['create', 'store']);
-    Route::get('Bills/store/{id}', [billsController::class, 'store']);
-
-
-    Route::resource('Visits' ,visitsController::class)->except('create');
-    Route::get('Visits/create/{id}', [visitsController::class, 'create']);
-
-    Route::get('/showPatientVisits/{id}', [visitsController::class, 'showPatientVisits']);
-    Route::get('/showLastVisit/{id}', [visitsController::class, 'showLastVisit']);
-
+    Route::resource('Visits', visitsController::class);
+    Route::post('Visits/search', [visitsController::class, 'search']);
     Route::post('/checkDate', [visitsController::class, 'checkDate']);
     Route::get('/checkWorkingDays', [visitsController::class, 'checkWorkingDays']);
 
-    // add diagnoses, prescriptions and tests
-    Route::get('/Visits/addDiagnose/{id}', [diagnosesController::class, 'create']);
-    Route::post('/addDiagnose', [diagnosesController::class, 'store']);
+    Route::resource('Diagnoses', diagnosesController::class);
+    Route::get('/show_diagnoses/{id}', [diagnosesController::class, 'show_patient_diagnoses']);
 
-    Route::get('/Visits/addPrescription/{id}', [prescriptionsController::class, 'create']);
-    Route::post('/addPrescription', [prescriptionsController::class, 'store']);
+    Route::resource('Tests', testsController::class);
 
-    Route::get('/Visits/addTest/{id}', [testsController::class, 'create']);
-    Route::post('/addTest', [testsController::class, 'store']);
-
-    Route::get('/Bills/addProcedure/{id}', [billsController::class, 'addProcedureView']);
-    Route::post('/addProcedure', [billsController::class, 'addProcedure']);
-
-    // print receipts
-    Route::get('/printFirstReceipt/{id}', [billsController::class, 'printFirstReceipt']);
-    Route::get('/printSecondReceipt/{id}', [billsController::class, 'printSecondReceipt']);
+    Route::resource('TestResults', TestResultController::class);
+    Route::post('TestResults/saveImage', [TestResultController::class, 'saveImage']);
 });
-
-
-

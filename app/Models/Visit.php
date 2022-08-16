@@ -17,7 +17,7 @@ class Visit extends Model
         'visitType'
     ];
 
-    public function patientName()
+    public function patient()
     {
         return $this->belongsTo(Patient::class, 'patientId');
     }

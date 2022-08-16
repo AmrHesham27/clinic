@@ -5,38 +5,21 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Visit;
 use App\Models\Diagnose;
-use Exception;
+use App\Models\Patient;
 
 class diagnosesController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
-    {
-        //
-    }
+    public function show_patient_diagnoses($id) {
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create(Request $request)
-    {
-        $id = $request->id;
-        try{
-            Visit::findOrFail($id);
-        }
-        catch(Exception){
-            $this->message(false, '', 'This visit does not exist');
-            return redirect(url('/Visits/'));
-        }
-        return view('Visits.addTest', ['id' => $id]);
+        $patient_diagnoses = Patient::findOrFail($id)->visits()
+            ->select('created_at', 'updated_at', 'date')
+            ->addSelect(['diagnose' => Diagnose::select('diagnosis')
+                ->whereColumn('visit_id', 'visits.id')
+                ->limit(1)
+            ])
+        ->get();
+        return response()->json($patient_diagnoses, 200);
     }
-
     /**
      * Store a newly created resource in storage.
      *
@@ -51,14 +34,15 @@ class diagnosesController extends Controller
         ]);
         try{
             Visit::findOrFail($data['visit_id']);
+            Diagnose::create($data);
+            return response()->json('diagnose was added', 200);
         }
-        catch(Exception){
-            $this->message(false, '', 'This visit does not exist');
-            return redirect(url('/Visits/'));
+        catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json('visit was not found', 500);
         }
-        $op = Diagnose::create($data);
-        $this->message($op, 'Diagnose was created', 'Error happened');
-        return redirect()->back();
+        catch(\Exception $e){
+            return response()->json($e->getMessage(), 500);
+        }
     }
 
     /**
@@ -69,18 +53,16 @@ class diagnosesController extends Controller
      */
     public function show($id)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
+        try{
+            $visit = Visit::findOrFail($id);
+            return response()->json($visit, 200);
+        }
+        catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json('visit was not found', 500);
+        }
+        catch(\Exception $e){
+            return response()->json($e->getMessage(), 500);
+        }
     }
 
     /**
@@ -92,7 +74,20 @@ class diagnosesController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $data = $this->validate($request, [
+            "visit_id"  => "required|numeric",
+            "diagnosis" => "required|string|max:250"
+        ]);
+        try {
+            Diagnose::where('id', $id)->update([
+                "visit_id" => $data['visit_id'],
+                "diagnosis" => $data['diagnosis'],
+            ]);
+            return response()->json('Diagnose was edited successfully', 200);
+        }
+        catch (\Exception $e) {
+            return response()->json($e->getMessage(), 500);
+        }
     }
 
     /**
@@ -103,6 +98,12 @@ class diagnosesController extends Controller
      */
     public function destroy($id)
     {
-        //
+        try {
+            Diagnose::where('id', $id)->delete();
+            return response()->json('Diagnose was deleted successfully', 200);
+        }
+        catch (\Exception $e) {
+            return response()->json($e->getMessage(), 500);
+        }
     }
 }

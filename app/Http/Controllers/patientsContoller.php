@@ -21,16 +21,6 @@ class patientsContoller extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -87,29 +77,23 @@ class patientsContoller extends Controller
      */
     public function show($id)
     {
+        $response = new stdClass;
         try {
             $patient = Patient::findOrFail($id);
-            $response = new stdClass;
             $response->data = $patient;
-            $response->message = 'user was found successfully';
+            $response->message = 'patient was found successfully';
             return response()->json($response, 200);
         }
-        catch (Exception) {
-            $response = new stdClass;
-            $response->message = 'user was not found';
+        catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            $response->message = 'patient was not found';
+            $response->userWasNotFound = true;
             return response()->json($response, 500);
         }
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
+        catch (\Exception $e) {
+            $response->message = 'Error happened';
+            $response->class = get_class($e); // get the class of exception to catch it
+            return response()->json($response, 500);
+        }
     }
 
     /**
@@ -121,7 +105,27 @@ class patientsContoller extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $response = new stdClass;
+        try{
+            $data = $this->validate($request,[
+                "patientName"  => "required|string|min:4|max:60",
+                "age" => "required|numeric|gte:3|lte:120",
+                "address" => "required|string|max:100",
+                "phoneNumber" => "required|regex:/(01)[0,1,2,5][0-9]{8}/", // after developement add |unique:patients|
+            ]);
+            Patient::where('id', $id)->update([
+                "patientName"  => $data['patientName'],
+                "age" => $data['age'],
+                "address" => $data['address'],
+                "phoneNumber" => $data['phoneNumber']
+            ]);
+            $response->message = 'Patient was edited successfully';
+            return response()->json($response ,200);
+        }
+        catch (Exception $e){
+            $response->message = $e->getMessage();
+            return response()->json($e->getMessage(), 500);
+        }
     }
 
     /**
@@ -132,6 +136,21 @@ class patientsContoller extends Controller
      */
     public function destroy($id)
     {
-        //
+        $response = new stdClass;
+        try {
+            $patient = Patient::findOrFail($id);
+            $patient->delete();
+            $response->message = 'Patient was deleted successfully';
+            return response()->json($response, 200);
+        }
+        catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            $response->message = 'Patient was not found';
+            $response->userWasNotFound = true;
+            return response()->json($response, 500);
+        }
+        catch (\Exception $e){
+            $response->message = 'Patient was not deleted';
+            return response()->json($e->getMessage(), 500);
+        }
     }
 }

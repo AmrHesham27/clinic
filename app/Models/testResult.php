@@ -5,17 +5,16 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Test extends Model
+class testResult extends Model
 {
     use HasFactory;
-    protected $table = 'tests';
     protected $fillable = [
-        'visit_id',
-        'testName',
+        'test_id',
+        'result',
     ];
 
-    public function visit()
+    public function test()
     {
-        return $this->belongsTo(Visit::class);
+        return $this->belongsTo(Test::class);
     }
 }
