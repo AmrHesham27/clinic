@@ -18,7 +18,11 @@ class diagnosesController extends Controller
                 ->limit(1)
             ])
         ->get();
-        return response()->json($patient_diagnoses, 200);
+        return response()->json([
+            "status" => true,
+            "data" => $patient_diagnoses,
+            "message" => "Patient diagnose was fetched successfully"
+        ], 200);
     }
     /**
      * Store a newly created resource in storage.
@@ -35,13 +39,22 @@ class diagnosesController extends Controller
         try{
             Visit::findOrFail($data['visit_id']);
             Diagnose::create($data);
-            return response()->json('diagnose was added', 200);
+            return response()->json([
+                "status" => true,
+                "message" => 'Diagnose was added successfully!'
+            ], 200);
         }
         catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json('visit was not found', 500);
+            return response()->json([
+                "status" => false,
+                "message" => 'visit was not found'
+            ], 500);
         }
         catch(\Exception $e){
-            return response()->json($e->getMessage(), 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -55,13 +68,23 @@ class diagnosesController extends Controller
     {
         try{
             $visit = Visit::findOrFail($id);
-            return response()->json($visit, 200);
+            return response()->json([
+                "status" => true,
+                "data" => $visit,
+                "message" => "Visit was fetched successfully!",
+            ], 200);
         }
         catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json('visit was not found', 500);
+            return response()->json([
+                "status" => 500,
+                "message" => 'Visit was not found'
+            ], 500);
         }
         catch(\Exception $e){
-            return response()->json($e->getMessage(), 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -83,10 +106,16 @@ class diagnosesController extends Controller
                 "visit_id" => $data['visit_id'],
                 "diagnosis" => $data['diagnosis'],
             ]);
-            return response()->json('Diagnose was edited successfully', 200);
+            return response()->json([
+                "status" => true,
+                "message" => 'Diagnose was edited successfully'
+            ], 200);
         }
         catch (\Exception $e) {
-            return response()->json($e->getMessage(), 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -100,10 +129,16 @@ class diagnosesController extends Controller
     {
         try {
             Diagnose::where('id', $id)->delete();
-            return response()->json('Diagnose was deleted successfully', 200);
+            return response()->json([
+                "status" => true,
+                "message" => 'Diagnose was deleted successfully'
+            ], 200);
         }
         catch (\Exception $e) {
-            return response()->json($e->getMessage(), 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 }

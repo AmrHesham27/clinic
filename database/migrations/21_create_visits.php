@@ -13,12 +13,16 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('test_results', function (Blueprint $table) {
-            $table->increments('id');
-            $table->unsignedInteger('test_id');
+        Schema::create('visits', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->foreignId('patient_id')->references('id')->on('patients')
+                ->onDelete('cascade')->onUpdate('cascade');
             $table->date('date');
-            $table->string('result', 100);
+            $table->time('startTime');
+            $table->time('endTime');
             $table->timestamps();
+            $table->enum('visitType', ['examination', 'consultation']);
+
         });
     }
 
@@ -29,6 +33,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('test_results');
+        Schema::dropIfExists('visits');
     }
 };

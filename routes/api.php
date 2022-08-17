@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\patientsContoller;
 use App\Http\Controllers\visitsController;
 use App\Http\Controllers\TestResultController;
@@ -39,4 +40,8 @@ Route::group(['middleware' => 'cors'], function () {
 
     Route::resource('TestResults', TestResultController::class);
     Route::post('TestResults/saveImage', [TestResultController::class, 'saveImage']);
+
+    // Authentication
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register']);
 });

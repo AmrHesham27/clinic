@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Visit;
 use App\Models\Test;
-use stdClass;
 
 class testsController extends Controller
 {
@@ -17,7 +16,6 @@ class testsController extends Controller
      */
     public function store(Request $request)
     {
-        $response = new stdClass;
         $data = $this->validate($request,[
             "visit_id"  => "required|numeric",
             "testName" => "required|string|max:80"
@@ -25,16 +23,22 @@ class testsController extends Controller
         try{
             Visit::findOrFail($data['visit_id']);
             Test::create($data);
-            $response->message = 'New Test was added successfully';
-            return response()->json($response, 200);
+            return response()->json([
+                "status" => true,
+                "message" => 'New Test was added successfully'
+            ], 200);
         }
         catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            $response->message = 'Patient was not found';
-            return response()->json($response, 500);
+            return response()->json([
+                "status" => false,
+                "message" => 'Patient was not found'
+            ], 500);
         }
         catch (\Exception $e) {
-            $response->message = $e->getMessage();
-            return response()->json($response, 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -48,10 +52,17 @@ class testsController extends Controller
     {
         try {
             $test = Test::findOrFail($id);
-            return response()->json($test, 200);
+            return response()->json([
+                "status" => true,
+                "message" => "Test was fetched successfully!",
+                "data" => $test
+            ], 200);
         }
         catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json('could not find this test', 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
         catch (\Exception $e) {
             return response()->json($e->getMessage(), 500);
@@ -67,7 +78,6 @@ class testsController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $response = new stdClass;
         $data = $this->validate($request,[
             "id" => "required|numeric",
             "visit_id"  => "required|numeric",
@@ -80,8 +90,10 @@ class testsController extends Controller
             ]);
         }
         catch (\Exception $e) {
-            $response->message = $e->getMessage();
-            return response()->json($response, 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -95,10 +107,16 @@ class testsController extends Controller
     {
         try {
             Test::where('id', $id)->delete();
-            return response()->json('test was deleted successfully', 200);
+            return response()->json([
+                "status" => true,
+                "message" => "Test was deleted successfully!"
+            ], 200);
         }
         catch (\Exception $e) {
-            return response()->json($e->getMessage(), 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 }

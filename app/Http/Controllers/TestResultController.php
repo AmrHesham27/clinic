@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\testResult;
 use Illuminate\Http\Request;
-use stdClass;
 
 class TestResultController extends Controller
 {
@@ -16,18 +15,22 @@ class TestResultController extends Controller
      */
     public function store(Request $request)
     {
-        $response = new stdClass;
         try {
             $data = $this->validate($request, [
                 "test_id" => "required|numeric",
                 "result" => "required|string|max:100"
             ]);
             testResult::create($data);
-            $response->message = 'New test result was added successfully';
-            return response()->json($response, 200);
+            return response()->json([
+                "status" => true,
+                "message" => 'New test result was added successfully'
+            ], 200);
         }
         catch (\Exception $e) {
-            return response()->json($e->getMessage(), 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -41,10 +44,17 @@ class TestResultController extends Controller
     {
         try {
             $testResult = testResult::findOrFail($id);
-            return response()->json($testResult, 200);
+            return response()->json([
+                "status" => true,
+                "message" => "Test result was fetched successfully",
+                "data" => $testResult
+            ], 200);
         }
         catch (\Exception $e) {
-            return response()->json($e->getMessage(), 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -68,10 +78,16 @@ class TestResultController extends Controller
                 "date" => $data['date'],
                 "result" => $data['result'],
             ]);
-            return response()->json('test result was edited successfully', 200);
+            return response()->json([
+                "status" => true,
+                "message" => "Result was updated successfully!"
+            ], 200);
         }
         catch (\Exception $e) {
-            return response()->json($e->getMessage(), 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -85,10 +101,16 @@ class TestResultController extends Controller
     {
         try {
             testResult::where('id', $id)->delete();
-            return response('test result was deleted successfully', 200);
+            return response([
+                "status" => true,
+                "message" => "Test Result was deleted successfully"
+            ], 200);
         }
         catch (\Exception $e) {
-            return response()->json($e->getMessage(), 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -111,10 +133,16 @@ class TestResultController extends Controller
                 );
             }
 
-            return response()->json('New Images were added successfully', 200);
+            return response()->json([
+                "status" => true,
+                "message" => "Image was saved successfully"
+            ], 200);
         }
         catch (\Exception $e) {
-            return response()->json($e->getMessage(), 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 }

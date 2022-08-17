@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Patient;
 use Exception;
 use Illuminate\Http\Request;
-use stdClass;
 
 class patientsContoller extends Controller
 {
@@ -16,8 +15,21 @@ class patientsContoller extends Controller
      */
     public function index()
     {
-        $all_patients = Patient::orderBy('created_at', 'desc')->paginate(8);
-        return response()->json($all_patients, 200);
+        try {
+            $all_patients = Patient::orderBy('created_at', 'desc')->paginate(8);
+            return response()->json([
+                "status" => true,
+                "message" => "Patients were fetched successfully!",
+                "data" => $all_patients
+            ], 200);
+        }
+        catch (\Exception $e) {
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ]);
+        }
+
     }
 
     /**
@@ -35,11 +47,11 @@ class patientsContoller extends Controller
                 "address" => "required|string|max:100",
                 "phoneNumber" => "required|regex:/(01)[0,1,2,5][0-9]{8}/", // after developement add |unique:patients|
             ]);
-            $id = Patient::create($data)->id;
-            $response = new stdClass;
-            $response->data = $id;
-            $response->message = 'New patient was added successfully';
-            return response()->json($response ,200);
+            Patient::create($data)->id;
+            return response()->json([
+                "status" => true,
+                "message" => 'New patient was added successfully'
+            ] ,200);
         }
         catch (Exception $e){
             return response()->json($e->getMessage(), 500);
@@ -60,12 +72,17 @@ class patientsContoller extends Controller
             elseif ( preg_match('/^[0-9]+$/', $userEntry) ){
                 $patients = Patient::where('id', $userEntry)->paginate(8);
             }
-            $response = new stdClass;
-            $response->data = $patients;
-            return response()->json($response, 200);
+            return response()->json([
+                "status" => true,
+                "message" => "Search result was fetched successfully!",
+                "data" => $patients
+            ], 200);
         }
         catch (Exception $e){
-            return response()->json($e->getMessage(), 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -77,22 +94,26 @@ class patientsContoller extends Controller
      */
     public function show($id)
     {
-        $response = new stdClass;
         try {
             $patient = Patient::findOrFail($id);
-            $response->data = $patient;
-            $response->message = 'patient was found successfully';
-            return response()->json($response, 200);
+            return response()->json([
+                "status" => true,
+                "data" => $patient,
+                "message" => 'patient was found successfully'
+            ], 200);
         }
         catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            $response->message = 'patient was not found';
-            $response->userWasNotFound = true;
-            return response()->json($response, 500);
+            return response()->json([
+                "status" => false,
+                "message" => 'patient was not found',
+                "userWasNotFound" => true
+            ], 500);
         }
         catch (\Exception $e) {
-            $response->message = 'Error happened';
-            $response->class = get_class($e); // get the class of exception to catch it
-            return response()->json($response, 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -105,7 +126,6 @@ class patientsContoller extends Controller
      */
     public function update(Request $request, $id)
     {
-        $response = new stdClass;
         try{
             $data = $this->validate($request,[
                 "patientName"  => "required|string|min:4|max:60",
@@ -119,12 +139,16 @@ class patientsContoller extends Controller
                 "address" => $data['address'],
                 "phoneNumber" => $data['phoneNumber']
             ]);
-            $response->message = 'Patient was edited successfully';
-            return response()->json($response ,200);
+            return response()->json([
+                "status" => true,
+                "message" => "Patient was edited successfully"
+            ] ,200);
         }
         catch (Exception $e){
-            $response->message = $e->getMessage();
-            return response()->json($e->getMessage(), 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -136,21 +160,25 @@ class patientsContoller extends Controller
      */
     public function destroy($id)
     {
-        $response = new stdClass;
         try {
             $patient = Patient::findOrFail($id);
             $patient->delete();
-            $response->message = 'Patient was deleted successfully';
-            return response()->json($response, 200);
+            return response()->json([
+                "status" => true,
+                "message" => 'Patient was deleted successfully'
+            ], 200);
         }
         catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            $response->message = 'Patient was not found';
-            $response->userWasNotFound = true;
-            return response()->json($response, 500);
+            return response()->json([
+                "status" => false,
+                "message" => 'Patient was not found'
+            ], 500);
         }
         catch (\Exception $e){
-            $response->message = 'Patient was not deleted';
-            return response()->json($e->getMessage(), 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 }

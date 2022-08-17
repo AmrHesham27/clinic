@@ -13,10 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('workingDays', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('day', 10);
-            $table->boolean('working');
+        Schema::create('services_procedures', function (Blueprint $table) {
+            $table->smallIncrements('id');
+            $table->string('serviceName', 100);
+            $table->smallInteger('price');
         });
     }
 
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('workinghours');
+        Schema::dropIfExists('services_procedures');
     }
 };

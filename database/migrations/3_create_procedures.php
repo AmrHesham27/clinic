@@ -13,10 +13,15 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('services_procedures', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('serviceName', 100);
+        Schema::create('procedures', function (Blueprint $table) {
+            $table->bigIncrements('id');
+
+            $table->unsignedSmallInteger('procedure_id');
+            $table->foreign('procedure_id')->references('id')->on('services_procedures');
+
+            $table->foreignId('bill_id')->references('id')->on('bills');
             $table->smallInteger('price');
+            $table->timestamps();
         });
     }
 
@@ -27,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('services_procedures');
+        Schema::dropIfExists('procedures');
     }
 };

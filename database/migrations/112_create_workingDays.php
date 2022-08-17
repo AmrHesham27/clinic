@@ -13,12 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('diagnoses', function (Blueprint $table) {
-            $table->increments('id');
-            $table->unsignedInteger('visit_id');
-            $table->string('diagnosis', 250);
-            $table->timestamps();
-
+        Schema::create('workingDays', function (Blueprint $table) {
+            $table->smallIncrements('id');
+            $table->string('day', 10);
+            $table->boolean('working');
         });
     }
 
@@ -29,6 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('diagnoses');
+        Schema::dropIfExists('workinghours');
     }
 };

@@ -26,15 +26,24 @@ class prescriptionsController extends Controller
             Visit::findOrFail($data['visit_id']);
             Prescription::create($data);
             $response->message = 'New Prescriptiont was added successfully';
-            return response()->json($response, 200);
+            return response()->json([
+                "status" => true,
+                "message" => 'New Prescriptiont was added successfully'
+            ], 200);
         }
         catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             $response->message = 'Visit was not found';
-            return response()->json($response, 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
         catch (\Exception $e) {
             $response->message = $e->getMessage();
-            return response()->json($response, 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -48,13 +57,23 @@ class prescriptionsController extends Controller
     {
         try {
             $Prescription = Prescription::findOrFail($id);
-            return response()->json($Prescription, 200);
+            return response()->json([
+                "status" => true,
+                "data" => $Prescription,
+                "message" => 'Prescription was fetched successfully'
+            ], 200);
         }
         catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json('could not find this Prescription', 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
         catch (\Exception $e) {
-            return response()->json($e->getMessage(), 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -77,10 +96,17 @@ class prescriptionsController extends Controller
                 "visit_id" => $data['visit_id'],
                 "name" => $data['name'],
             ]);
+            return response()->json([
+                "status" => true,
+                "message" => 'Prescription was updated successfully'
+            ], 200);
         }
         catch (\Exception $e) {
             $response->message = $e->getMessage();
-            return response()->json($response, 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -94,10 +120,16 @@ class prescriptionsController extends Controller
     {
         try {
             Prescription::where('id', $id)->delete();
-            return response()->json('Prescription was deleted successfully', 200);
+            return response()->json([
+                "status" => true,
+                "message" => 'Prescription was deleted successfully'
+            ], 200);
         }
         catch (\Exception $e) {
-            return response()->json($e->getMessage(), 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 }

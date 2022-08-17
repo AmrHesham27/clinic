@@ -31,7 +31,6 @@ class visitsController extends Controller
      */
     public function store(Request $request)
     {
-        $response = new stdClass();
         try{
             $data = $this->validate($request,[
                 "patientId"  => "required|numeric",
@@ -48,8 +47,10 @@ class visitsController extends Controller
                 ->get();
             $workingDays_array = $workingDays->pluck('day')->toArray();
             if( !in_array($day_name, $workingDays_array) ) {
-                $response->message = 'This is not working day';
-                return response()->json($response ,500);
+                return response()->json([
+                    "status" => false,
+                    "message" => "This is not working day"
+                ] ,500);
             }
 
             // check if there are visits in the same day and time
@@ -68,23 +69,27 @@ class visitsController extends Controller
 
                 if (!count($same_time_visits)) {
                     Visit::create($data);
-                    $response->message = 'New visit was added';
-                    return response()->json($response, 200);
+                    return response()->json([
+                        "status" => true,
+                        "message" => "New visit was added"
+                    ], 200);
                 }
                 else {
-                    $response->message = 'There is a visit in this time';
-                    return response()->json($response, 200);
+                    return response()->json([
+                        "status" => false,
+                        "message" => "There is a visit in this time"
+                    ], 500);
                 }
         }
         catch(\Exception $e) {
-            $response->message = $e->getMessage();
-            $response->class = get_class($e); // get the class of exception to catch it
-            return response()->json($response, 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
     public function checkDate(Request $request){
-        $response = new stdClass();
         try{
             $data = $this->validate($request,[
                 "date" => "required|date|after:yesterday",
@@ -98,28 +103,35 @@ class visitsController extends Controller
             ->whereColumn('patients.id', 'visits.patientId')])
             ->get();
 
-            $response->data = $same_day_visits;
-            $response->is_working_day = $is_working_day;
-            return response()->json($response, 200);
+            return response()->json([
+                "status" => true,
+                "data" => $same_day_visits,
+                "is_working_day" => $is_working_day
+            ], 200);
         }
         catch (\Exception $e) {
-            $response->message = $e->getMessage();
-            return response()->json($response, 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
     public function checkWorkingDays() {
-        $response = new stdClass();
         try{
             $workingDays = DB::table('WorkingDays')->select('day')
                 ->groupBy('day')
                 ->get();
-            $response->data = $workingDays;
-            return response()->json($response, 200);
+            return response()->json([
+                "status" => true,
+                "data" => $workingDays
+            ], 200);
         }
-        catch (Exception) {
-            $response->message = 'Error';
-            return response()->json($response, 500);
+        catch (\Exception $e) {
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -131,19 +143,24 @@ class visitsController extends Controller
      */
     public function show($id)
     {
-        $response = new stdClass();
         try{
             $visit = Visit::findOrFail($id);
-            $response->data = $visit;
-            return response()->json($response, 200);
+            return response()->json([
+                "status" => true,
+                "data" => $visit
+            ], 200);
         }
         catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            $response->message = 'Patient was not found';
-            return response()->json($response, 500);
+            return response()->json([
+                "status" => false,
+                "message" => "Patient was not found"
+            ], 500);
         }
         catch(\Exception $e){
-            $response->message = $e->getMessage();
-            return response()->json($response, 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -156,7 +173,6 @@ class visitsController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $response = new stdClass();
         try{
             $data = $this->validate($request,[
                 "patientId" => "required|numeric",
@@ -173,8 +189,10 @@ class visitsController extends Controller
                 ->get();
             $workingDays_array = $workingDays->pluck('day')->toArray();
             if( !in_array($day_name, $workingDays_array) ) {
-                $response->message = 'This is not working day';
-                return response()->json($response ,500);
+                return response()->json([
+                    "status" => false,
+                    "message" => 'There is a visit in this time'
+                ] ,500);
             }
 
             // check if there are visits in the same day and time
@@ -201,8 +219,10 @@ class visitsController extends Controller
                             'visitType' => $data['visitType'],
                         ]
                     );
-                    $response->message = 'visit was edited';
-                    return response()->json($response, 200);
+                    return response()->json([
+                        "status" => true,
+                        "message" => 'message was edited'
+                    ], 200);
                 }
                 else {
                     Visit::where('id', $id)->update(
@@ -211,14 +231,17 @@ class visitsController extends Controller
                             'visitType' => $data['visitType'],
                         ]
                     );
-                    $response->message = 'There is a visit in this time';
-                    return response()->json($response, 200);
+                    return response()->json([
+                        "status" => true,
+                        "message" => 'There is a visit in this time'
+                    ], 200);
                 }
         }
         catch(\Exception $e) {
-            $response->message = $e->getMessage();
-            $response->class = get_class($e); // get the class of exception to catch it
-            return response()->json($response, 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 
@@ -230,24 +253,28 @@ class visitsController extends Controller
      */
     public function destroy($id)
     {
-        $response = new stdClass;
         try {
             Visit::where('id', $id)->delete();
-            $response->message = 'Visit was deleted succesfully';
-            return response()->json($response, 200);
+            return response()->json([
+                "status" => true,
+                "message" => "Visit was deleted succesfully"
+            ], 200);
         }
         catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            $response->message = 'Visit was not found';
-            return response()->json($response, 500);
+            return response()->json([
+                "status" => false,
+                "message" => "visit was not found"
+            ], 500);
         }
         catch (\Exception $e) {
-            $response->message = $e->getMessage();
-            return response()->json($response, 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         };
     }
 
     public function search (Request $request){
-        $response = new stdClass;
         try {
             $this->validate($request, [
                 'userEntry' => 'numeric|nullable'
@@ -258,26 +285,39 @@ class visitsController extends Controller
 
             if( $userEntry && !$date ) {
                 $visits = Visit::where('patientId', $userEntry)->paginate(8);
-                $response->data = $visits;
-                return response()->json($response, 200);
+                return response()->json([
+                    "status" => true,
+                    "data" => $visits,
+                    "message" => "Search data were fetched successfully"
+                ], 200);
             }
             elseif ( !$userEntry && $date ) {
                 $visits = Visit::where('date', $date)->paginate(8);
-                $response->data = $visits;
-                return response()->json($response, 200);
+                return response()->json([
+                    "status" => true,
+                    "data" => $visits,
+                    "message" => "Search data were fetched successfully"
+                ], 200);
             }
             elseif ( $userEntry && $date ) {
                 $visits = Visit::where('date', $date)
                     ->where('patientId', $userEntry)->paginate(8);
-                $response->data = $visits;
-                return response()->json($response, 200);
+                return response()->json([
+                    "status" => true,
+                    "data" => $visits,
+                    "message" => "Search data were fetched successfully"
+                ], 200);
             }
-            $response->message = 'Please enter valid patient id or visits date.';
-            return response()->json($response, 200);
+            return response()->json([
+                "status" => false,
+                "message" => 'Please enter valid patient id or visits date.'
+            ], 200);
         }
         catch (Exception $e){
-            $response->message = $e->getMessage();
-            return response()->json($response, 500);
+            return response()->json([
+                "status" => false,
+                "message" => $e->getMessage()
+            ], 500);
         }
     }
 }

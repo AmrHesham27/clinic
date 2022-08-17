@@ -13,11 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('procedures', function (Blueprint $table) {
-            $table->increments('id');
-            $table->unsignedInteger('procedureId');
-            $table->unsignedInteger('bill_id');
-            $table->smallInteger('price');
+        Schema::create('test_results', function (Blueprint $table) {
+            $table->bigIncrements('id');
+            $table->foreignId('test_id')->references('id')->on('tests');
+            $table->date('date');
+            $table->string('result', 100);
             $table->timestamps();
         });
     }
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('procedures');
+        Schema::dropIfExists('test_results');
     }
 };
